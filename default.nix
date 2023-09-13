@@ -1,8 +1,7 @@
-with import <nixpkgs> {};
+{ lib, buildPackages, fetchurl, stdenv, ... }:
 
 let
-
-  git-clang-format = stdenv.mkDerivation {
+  git-clang-format = buildPackages.fetchurl {
     name = "git-clang-format";
     version = "2019-06-21";
     src = fetchurl {
@@ -11,38 +10,23 @@ let
       executable = true;
     };
     nativeBuildInputs = [
-      makeWrapper
+      buildPackages.makeWrapper
     ];
     buildInputs = [
-      clang-tools
-      python3
+      buildPackages.clang-tools
+      buildPackages.python3
     ];
     unpackPhase = ":";
     installPhase = ''
       mkdir -p $out/opt $out/bin
       cp $src $out/opt/git-clang-format
-      makeWrapper $out/opt/git-clang-format $out/bin/git-clang-format \
+      buildPackages.makeWrapper $out/opt/git-clang-format $out/bin/git-clang-format \
         --add-flags --binary \
-        --add-flags ${clang-tools}/bin/clang-format
+        --add-flags ${buildPackages.clang-tools}/bin/clang-format
     '';
   };
-
 in
-
-stdenv.mkDerivation {
-  name = "libdjinterop";
-  version = "unstable";
-  src = nix-gitignore.gitignoreSource [ ".git*" ] ./.;
-  nativeBuildInputs = [
-    git-clang-format
-    cmake
-    ninja
-    pkg-config
-  ];
-  outputs = [ "out" "dev" ];
-  buildInputs = [
-    boost
-    sqlite
-    zlib
-  ];
+{
+  myapp = import ./pkgs/myapp;
+  git-clang-format = git-clang-format;
 }
